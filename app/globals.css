@@ -1,26 +1,245 @@
 @import "tailwindcss";
 
+/* Configure dark mode for Tailwind v4 */
+@custom-variant dark (&:is(.dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Premium color palette - Green, Light Green, Blue */
+  --emerald-50: #ecfdf5;
+  --emerald-100: #d1fae5;
+  --emerald-200: #a7f3d0;
+  --emerald-300: #6ee7b7;
+  --emerald-400: #34d399;
+  --emerald-500: #10b981;
+  --emerald-600: #059669;
+  --emerald-700: #047857;
+  --emerald-800: #065f46;
+  --emerald-900: #064e3b;
+  
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-300: #93c5fd;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a8a;
+  
+  /* Premium shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  
+  /* Premium gradients */
+  --gradient-primary: linear-gradient(135deg, #059669 0%, #047857 50%, #2563eb 100%);
+  --gradient-secondary: linear-gradient(135deg, #ecfdf5 0%, #dbeafe 100%);
+  --gradient-accent: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
 }
 
-@theme inline {
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  
+  /* Dark mode colors */
+  --emerald-50: #064e3b;
+  --emerald-100: #065f46;
+  --emerald-200: #047857;
+  --emerald-300: #059669;
+  --emerald-400: #10b981;
+  --emerald-500: #34d399;
+  --emerald-600: #6ee7b7;
+  --emerald-700: #a7f3d0;
+  --emerald-800: #d1fae5;
+  --emerald-900: #ecfdf5;
+  
+  --blue-50: #1e3a8a;
+  --blue-100: #1e40af;
+  --blue-200: #1d4ed8;
+  --blue-300: #2563eb;
+  --blue-400: #3b82f6;
+  --blue-500: #60a5fa;
+  --blue-600: #93c5fd;
+  --blue-700: #bfdbfe;
+  --blue-800: #dbeafe;
+  --blue-900: #eff6ff;
+  
+  /* Dark mode shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.6);
+}
+
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  
+  /* Enable dark mode */
+  --default-transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Global dark mode styles - ensure all elements respond to theme */
+.dark,
+html.dark {
+  color-scheme: dark;
+}
+
+/* Smooth transitions for all elements - but don't override Tailwind classes */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Let Tailwind handle all colors - don't force override */
+/* Remove any hardcoded color overrides that prevent dynamic theming */
+
+/* Let Tailwind handle heading colors - removed hardcoded rules to allow dynamic theming */
+
+/* Let Tailwind classes handle all colors dynamically */
+/* Removed color: inherit rules to allow Tailwind dark: classes to work properly */
+
+/* Premium scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #059669, #2563eb);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #047857, #1d4ed8);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #10b981, #3b82f6);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #34d399, #60a5fa);
+}
+
+/* Premium animations */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  background-size: 1000px 100%;
+}
+
+/* Premium glass effect */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Premium gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #059669 0%, #047857 50%, #2563eb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: background 0.3s ease, -webkit-background-clip 0.3s ease, background-clip 0.3s ease;
+  display: inline-block;
+}
+
+.dark .gradient-text,
+html.dark .gradient-text,
+[data-theme="dark"] .gradient-text {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #60a5fa 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* Premium button styles */
+.btn-premium {
+  background: linear-gradient(135deg, #059669 0%, #2563eb 100%);
+  box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.3), 0 8px 10px -6px rgba(37, 99, 235, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px -5px rgba(5, 150, 105, 0.4), 0 10px 15px -6px rgba(37, 99, 235, 0.4);
+}
+
+.dark .btn-premium {
+  background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.3), 0 8px 10px -6px rgba(59, 130, 246, 0.3);
+}
+
+/* Premium card styles */
+.card-premium {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(5, 150, 105, 0.1);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.dark .card-premium,
+html.dark .card-premium {
+  background-color: rgba(17, 24, 39, 0.95) !important;
+  border-color: rgba(16, 185, 129, 0.2) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Ensure all divs with card-premium change background */
+.card-premium,
+.card-premium * {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.card-premium:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.15), 0 10px 15px -6px rgba(0, 0, 0, 0.1);
+  border-color: rgba(5, 150, 105, 0.3);
+}
+
+.dark .card-premium:hover {
+  box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.7), 0 10px 15px -6px rgba(0, 0, 0, 0.5);
+  border-color: rgba(16, 185, 129, 0.4);
 }
