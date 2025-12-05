@@ -48,19 +48,17 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
-                  const theme = localStorage.getItem('theme');
-                  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                  const initialTheme = theme || systemTheme;
+                  const theme = localStorage.getItem('theme') || 'light';
                   const root = document.documentElement;
                   root.classList.remove('dark', 'light');
-                  if (initialTheme === 'dark') {
+                  if (theme === 'dark') {
                     root.classList.add('dark');
                     root.style.colorScheme = 'dark';
                   } else {
                     root.classList.remove('dark');
                     root.style.colorScheme = 'light';
                   }
-                  root.setAttribute('data-theme', initialTheme);
+                  root.setAttribute('data-theme', theme);
                 } catch (e) {}
               })();
             `,

@@ -1,3 +1,5 @@
+import "server-only";
+
 import getDBConnection from "@/lib/db/connection";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 

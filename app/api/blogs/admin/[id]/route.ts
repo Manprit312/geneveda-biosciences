@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import blogService from "@/app/services/blogService";
 import { initializeDatabase } from "@/lib/db/migrations";
+import { requireAdmin } from "@/lib/middleware/auth";
 
 // Initialize database on first request
 let dbInitialized = false;
@@ -12,14 +13,14 @@ const initDB = async () => {
 };
 
 // GET - Fetch blog post by ID (for admin)
-export async function GET(
+async function getHandler(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  admin: { id: number; role: string },
+  id: string
 ) {
   try {
     await initDB();
 
-    const { id } = await params;
     const blog = await blogService.getBlogById(Number(id));
 
     if (!blog) {
@@ -60,15 +61,23 @@ export async function GET(
   }
 }
 
-// PUT - Update blog post (protected - add auth later)
-export async function PUT(
+export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  return requireAdmin((r, a) => getHandler(r, a, id))(request);
+}
+
+// PUT - Update blog post (protected)
+async function putHandler(
+  request: NextRequest,
+  admin: { id: number; role: string },
+  id: string
 ) {
   try {
     await initDB();
 
-    const { id } = await params;
     const body = await request.json();
     const {
       title,
@@ -144,15 +153,15 @@ export async function PUT(
   }
 }
 
-// DELETE - Delete blog post (protected - add auth later)
-export async function DELETE(
+// DELETE - Delete blog post (protected)
+async function deleteHandler(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  admin: { id: number; role: string },
+  id: string
 ) {
   try {
     await initDB();
 
-    const { id } = await params;
     const deleted = await blogService.deleteBlog(Number(id));
 
     if (!deleted) {
@@ -173,4 +182,20 @@ export async function DELETE(
       { status: 500 }
     );
   }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  return requireAdmin((r, a) => putHandler(r, a, id))(request);
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  return requireAdmin((r, a) => deleteHandler(r, a, id))(request);
 }

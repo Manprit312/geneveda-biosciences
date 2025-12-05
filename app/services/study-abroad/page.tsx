@@ -2,10 +2,13 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, Globe, GraduationCap, FileText, Award, Users, CheckCircle2, Dna } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, GraduationCap, FileText, Award, Users, CheckCircle2, Dna, Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function StudyAbroadPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Header */}
@@ -33,10 +36,87 @@ export default function StudyAbroadPage() {
             </div>
             <div className="md:hidden flex items-center gap-3">
               <ThemeToggle />
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors p-2 relative z-[100]"
+                aria-label="Toggle menu"
+                type="button"
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
             </div>
           </div>
         </nav>
       </header>
+
+      {/* Mobile Menu - Outside header for proper z-index */}
+      {mobileMenuOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMobileMenuOpen(false)}
+            className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
+          />
+          <motion.div
+            initial={{ x: "100%", opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "100%", opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="md:hidden fixed top-0 right-0 bottom-0 w-[85vw] max-w-sm bg-white dark:bg-gray-900 shadow-2xl z-[70] overflow-y-auto"
+            style={{ paddingTop: '4rem' }}
+          >
+            <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+              <span className="font-semibold text-gray-900 dark:text-white">Menu</span>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-2"
+                aria-label="Close menu"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <Link
+                href="/#services"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
+              >
+                Services
+              </Link>
+              <Link
+                href="/#training"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
+              >
+                Training
+              </Link>
+              <Link
+                href="/#study-abroad"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
+              >
+                Study Abroad
+              </Link>
+              <Link
+                href="/blog"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
+              >
+                Blog
+              </Link>
+              <Link
+                href="/"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
+              >
+                Home
+              </Link>
+            </div>
+          </motion.div>
+        </>
+      )}
       
       <div className="container mx-auto px-4 py-16 pt-24">
         <Link 
@@ -55,7 +135,7 @@ export default function StudyAbroadPage() {
         >
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 md:p-12">
             <div className="flex items-center mb-6">
-              <Globe className="w-12 h-12 text-blue-600 dark:text-blue-400 mr-4" />
+             
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
                 Study Abroad Guidance
               </h1>
@@ -145,7 +225,7 @@ export default function StudyAbroadPage() {
                 </p>
 
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mt-4 mb-2 flex items-center">
-                  <Globe className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />
+               
                   Visa Guidance
                 </h3>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">

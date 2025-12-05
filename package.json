@@ -20,18 +20,24 @@
     "reset-password": "./scripts/reset-mysql-password.sh",
     "quick-reset": "./scripts/quick-reset-password.sh",
     "seed-blogs": "node scripts/seed-blogs.js",
-    "setup-cloud-db": "node scripts/setup-cloud-db.js"
+    "setup-cloud-db": "node scripts/setup-cloud-db.js",
+    "create-admin": "node scripts/create-admin.js"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "framer-motion": "^12.23.25",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.555.0",
     "mysql2": "^3.15.3",
     "next": "16.0.6",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

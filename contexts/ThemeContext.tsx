@@ -38,13 +38,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
-    // Check localStorage or system preference
+    // Check localStorage, default to light (ignore system preference)
     if (typeof window !== "undefined") {
       const savedTheme = localStorage.getItem("theme") as Theme;
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-      const initialTheme = savedTheme || systemTheme;
+      const initialTheme = savedTheme || "light"; // Always default to light
       setTheme(initialTheme);
       applyTheme(initialTheme);
     }

@@ -20,12 +20,15 @@ import {
   TestTube,
   Code,
   BookCheck,
+  Menu,
+  X,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Home() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -41,44 +44,39 @@ export default function Home() {
     setFormData({ name: "", email: "", subject: "", message: "" });
   };
 
-  const services = [
-    {
-      icon: <FlaskConical className="w-8 h-8" />,
-      title: "R&D Services",
-      description: "Supporting innovation across molecular biology, biotechnology, aptamer, NGS, AMR, and applied life sciences.",
-      link: "/services/rd-services",
-    },
-    {
-      icon: <Database className="w-8 h-8" />,
-      title: "Bioinformatics Analysis",
-      description: "Transforming complex datasets into clear, meaningful insights through genomics, transcriptomics, and proteomics.",
-      link: "/services/bioinformatics",
-    },
-    {
-      icon: <Dna className="w-8 h-8" />,
-      title: "Next-Generation Sequencing",
-      description: "End-to-end sequencing support with whole genome, RNA-Seq, metagenomics, and variant analysis.",
-      link: "/services/ngs",
-    },
-    {
-      icon: <TestTube className="w-8 h-8" />,
-      title: "Diagnostics & Aptamers",
-      description: "Advanced diagnostic solutions and aptamer development for precision medicine and research.",
-      link: "/services/aptamers",
-    },
-    {
-      icon: <Microscope className="w-8 h-8" />,
-      title: "AMR Research",
-      description: "Comprehensive antimicrobial resistance research and analysis services.",
-      link: "/services/amr",
-    },
-    {
-      icon: <GraduationCap className="w-8 h-8" />,
-      title: "Training Programs",
-      description: "Industry-focused training in molecular biology, bioinformatics, coding for biology, and NGS data analysis.",
-      link: "/services/training",
-    },
-  ];
+  const [services, setServices] = useState<any[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+    try {
+      const response = await fetch("/api/services");
+      const data = await response.json();
+      if (data.success && data.services) {
+        setServices(data.services);
+      }
+    } catch (error) {
+      console.error("Error fetching services:", error);
+    } finally {
+      setServicesLoading(false);
+    }
+  };
+
+  const getIcon = (iconName: string) => {
+    const icons: Record<string, any> = {
+      FlaskConical: <FlaskConical className="w-8 h-8" />,
+      Database: <Database className="w-8 h-8" />,
+      Dna: <Dna className="w-8 h-8" />,
+      TestTube: <TestTube className="w-8 h-8" />,
+      Microscope: <Microscope className="w-8 h-8" />,
+      GraduationCap: <GraduationCap className="w-8 h-8" />,
+      Globe: <Globe className="w-8 h-8" />,
+    };
+    return icons[iconName] || <Globe className="w-8 h-8" />;
+  };
 
   const trainingPrograms = [
     "Molecular Biology",
@@ -132,10 +130,96 @@ export default function Home() {
             </div>
             <div className="md:hidden flex items-center gap-3">
               <ThemeToggle />
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors p-2 relative z-[100]"
+                aria-label="Toggle menu"
+                type="button"
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
             </div>
           </div>
         </nav>
       </header>
+
+      {/* Mobile Menu - Outside header for proper z-index */}
+      {mobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMobileMenuOpen(false)}
+            className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
+          />
+          {/* Menu Panel */}
+          <motion.div
+            initial={{ x: "100%", opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "100%", opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="md:hidden fixed top-0 right-0 bottom-0 w-[85vw] max-w-sm bg-white dark:bg-gray-900 shadow-2xl z-[70] overflow-y-auto"
+            style={{ paddingTop: '4rem' }}
+          >
+            <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+              <span className="font-semibold text-gray-900 dark:text-white">Menu</span>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-2"
+                aria-label="Close menu"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <Link
+                href="#services"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
+              >
+                Services
+              </Link>
+              <Link
+                href="#training"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
+              >
+                Training
+              </Link>
+              <Link
+                href="#study-abroad"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
+              >
+                Study Abroad
+              </Link>
+              <Link
+                href="#about"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
+              >
+                About
+              </Link>
+              <Link
+                href="/blog"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
+              >
+                Blog
+              </Link>
+              <Link
+                href="#contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block btn-premium text-white px-6 py-2.5 rounded-lg font-semibold text-center mt-4"
+              >
+                Contact Us
+              </Link>
+            </div>
+          </motion.div>
+        </>
+      )}
 
       {/* Hero Section */}
       <section className="pt-24 pb-16 bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-blue-50 dark:from-emerald-950/30 dark:via-emerald-900/20 dark:to-blue-950/30 relative overflow-hidden">
@@ -225,9 +309,19 @@ export default function Home() {
             </p>
           </motion.div>
 
+          {servicesLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service, index) => (
-              <Link key={index} href={service.link}>
+              {services.length === 0 ? (
+                <div className="col-span-full text-center py-12 text-gray-500">
+                  No services available yet. Add services from the admin panel.
+                </div>
+              ) : (
+                services.map((service, index) => (
+                  <Link key={service.id} href={`/services/${service.slug}`}>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -235,8 +329,12 @@ export default function Home() {
                 transition={{ delay: index * 0.1 }}
                   className="card-premium p-6 rounded-xl hover:shadow-xl transition-all duration-300 cursor-pointer group"
               >
-                <div className="text-emerald-600 dark:text-emerald-400 mb-4 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{service.icon}</div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{service.title}</h3>
+                      <div className="text-emerald-600 dark:text-emerald-400 mb-4 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {getIcon(service.icon || "Globe")}
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                        {service.title}
+                      </h3>
                 <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{service.description}</p>
                   <div className="mt-4 flex items-center text-emerald-600 dark:text-emerald-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                     <span className="text-sm font-medium">Learn more</span>
@@ -244,8 +342,10 @@ export default function Home() {
                   </div>
               </motion.div>
               </Link>
-            ))}
+                ))
+              )}
           </div>
+          )}
         </div>
       </section>
 
