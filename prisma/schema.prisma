@@ -1,0 +1,132 @@
+// Prisma Schema for GeneVeda Biosciences
+// Database: MySQL on Hostinger
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id           Int       @id @default(autoincrement())
+  username     String    @unique @db.VarChar(255)
+  email        String    @unique @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  name         String    @db.VarChar(255)
+  role         AdminRole @default(admin)
+  active       Boolean   @default(true)
+  lastLogin    DateTime? @map("last_login") @db.DateTime
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@index([email])
+  @@index([username])
+  @@map("admins")
+}
+
+enum AdminRole {
+  admin
+  superadmin
+}
+
+model Blog {
+  id          Int        @id @default(autoincrement())
+  title       String     @db.VarChar(500)
+  slug        String     @unique @db.VarChar(500)
+  excerpt     String     @db.Text
+  content     String     @db.LongText
+  author      String     @db.VarChar(255)
+  authorRole  String?    @map("author_role") @default("") @db.VarChar(255)
+  category    BlogCategory
+  tags        Json?
+  image       String?    @db.VarChar(1000)
+  readTime    String     @default("5 min read") @map("read_time") @db.VarChar(50)
+  featured    Boolean    @default(false)
+  published   Boolean    @default(true)
+  publishedAt DateTime?  @map("published_at") @db.DateTime
+  views       Int        @default(0)
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@index([category])
+  @@index([published, publishedAt])
+  @@index([slug])
+  @@map("blogs")
+}
+
+enum BlogCategory {
+  Research
+  NGS
+  Bioinformatics
+  Training
+  StudyAbroad @map("Study Abroad")
+}
+
+model Service {
+  id             Int      @id @default(autoincrement())
+  slug           String   @unique @db.VarChar(255)
+  title          String   @db.VarChar(500)
+  description    String?  @db.Text
+  content        String?  @db.LongText
+  icon           String?  @db.VarChar(100)
+  featured       Boolean  @default(false)
+  active         Boolean  @default(true)
+  orderIndex     Int      @default(0) @map("order_index")
+  metaTitle      String?  @map("meta_title") @db.VarChar(500)
+  metaDescription String? @map("meta_description") @db.Text
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@index([slug])
+  @@index([active])
+  @@index([orderIndex])
+  @@map("services")
+}
+
+model PageContent {
+  id          Int            @id @default(autoincrement())
+  pageSlug    String         @map("page_slug") @db.VarChar(255)
+  sectionKey  String         @map("section_key") @db.VarChar(255)
+  title       String?        @db.VarChar(500)
+  content     String?        @db.LongText
+  contentType ContentType     @default(html) @map("content_type")
+  orderIndex  Int            @default(0) @map("order_index")
+  active      Boolean        @default(true)
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@unique([pageSlug, sectionKey])
+  @@index([pageSlug])
+  @@index([active])
+  @@map("page_content")
+}
+
+enum ContentType {
+  text
+  html
+  json
+}
+
+model SiteSetting {
+  id          Int            @id @default(autoincrement())
+  settingKey  String         @unique @map("setting_key") @db.VarChar(255)
+  settingValue String?       @map("setting_value") @db.LongText
+  settingType SettingType     @default(text) @map("setting_type")
+  description String?        @db.Text
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@index([settingKey])
+  @@map("site_settings")
+}
+
+enum SettingType {
+  text
+  number
+  boolean
+  json
+}
+

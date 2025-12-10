@@ -141,85 +141,74 @@ export default function Home() {
             </div>
           </div>
         </nav>
-      </header>
 
-      {/* Mobile Menu - Outside header for proper z-index */}
-      {mobileMenuOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setMobileMenuOpen(false)}
-            className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
-          />
-          {/* Menu Panel */}
-          <motion.div
-            initial={{ x: "100%", opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: "100%", opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="md:hidden fixed top-0 right-0 bottom-0 w-[85vw] max-w-sm bg-white dark:bg-gray-900 shadow-2xl z-[70] overflow-y-auto"
-            style={{ paddingTop: '4rem' }}
-          >
-            <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
-              <span className="font-semibold text-gray-900 dark:text-white">Menu</span>
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-2"
-                aria-label="Close menu"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <Link
-                href="#services"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
-              >
-                Services
-              </Link>
-              <Link
-                href="#training"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
-              >
-                Training
-              </Link>
-              <Link
-                href="#study-abroad"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
-              >
-                Study Abroad
-              </Link>
-              <Link
-                href="#about"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
-              >
-                About
-              </Link>
-              <Link
-                href="/blog"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
-              >
-                Blog
-              </Link>
-              <Link
-                href="#contact"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block btn-premium text-white px-6 py-2.5 rounded-lg font-semibold text-center mt-4"
-              >
-                Contact Us
-              </Link>
-            </div>
-          </motion.div>
-        </>
-      )}
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
+            />
+            {/* Menu Panel */}
+            <motion.div
+              initial={{ x: "100%", opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: "100%", opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="md:hidden fixed top-0 right-0 bottom-0 w-[85vw] max-w-sm bg-white dark:bg-gray-900 shadow-2xl z-[70] overflow-y-auto pt-16"
+            >
+              <div className="p-6 space-y-4">
+                <Link
+                  href="#services"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
+                >
+                  Services
+                </Link>
+                <Link
+                  href="#training"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
+                >
+                  Training
+                </Link>
+                <Link
+                  href="#study-abroad"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
+                >
+                  Study Abroad
+                </Link>
+                <Link
+                  href="#about"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
+                >
+                  About
+                </Link>
+                <Link
+                  href="/blog"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium py-2"
+                >
+                  Blog
+                </Link>
+                <Link
+                  href="#contact"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block btn-premium text-white px-6 py-2.5 rounded-lg font-semibold text-center mt-4"
+                >
+                  Contact Us
+                </Link>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </header>
 
       {/* Hero Section */}
       <section className="pt-24 pb-16 bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-blue-50 dark:from-emerald-950/30 dark:via-emerald-900/20 dark:to-blue-950/30 relative overflow-hidden">

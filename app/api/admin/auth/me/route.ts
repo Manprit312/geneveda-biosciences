@@ -33,3 +33,10 @@ async function handler(req: NextRequest, admin: { id: number; role: string }) {
 
 export const GET = requireAdmin(handler);
 
+
+
+
+
+
+
+

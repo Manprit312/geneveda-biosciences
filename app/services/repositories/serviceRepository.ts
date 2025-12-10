@@ -1,7 +1,5 @@
 import "server-only";
-
-import getDBConnection from "@/lib/db/connection";
-import { RowDataPacket, ResultSetHeader } from "mysql2";
+import { prisma } from "@/lib/db/prisma";
 
 export interface Service {
   id: number;
@@ -36,92 +34,84 @@ export interface UpdateServiceData extends Partial<CreateServiceData> {
   id: number;
 }
 
+// Convert Prisma service to Service interface
+const mapPrismaToService = (prismaService: any): Service => {
+  return {
+    id: prismaService.id,
+    slug: prismaService.slug,
+    title: prismaService.title,
+    description: prismaService.description,
+    content: prismaService.content,
+    icon: prismaService.icon,
+    featured: prismaService.featured,
+    active: prismaService.active,
+    order_index: prismaService.orderIndex,
+    meta_title: prismaService.metaTitle,
+    meta_description: prismaService.metaDescription,
+    created_at: prismaService.createdAt,
+    updated_at: prismaService.updatedAt,
+  };
+};
+
 class ServiceRepository {
-  private db = getDBConnection();
-
-  private mapRowToService(row: any): Service {
-    return {
-      id: row.id,
-      slug: row.slug,
-      title: row.title,
-      description: row.description,
-      content: row.content,
-      icon: row.icon,
-      featured: Boolean(row.featured),
-      active: Boolean(row.active),
-      order_index: row.order_index || 0,
-      meta_title: row.meta_title,
-      meta_description: row.meta_description,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-    };
-  }
-
   async findAll(activeOnly: boolean = true): Promise<Service[]> {
-    let query = "SELECT * FROM services";
-    const params: any[] = [];
+    const where = activeOnly ? { active: true } : {};
 
-    if (activeOnly) {
-      query += " WHERE active = ?";
-      params.push(1);
-    }
+    const services = await prisma.service.findMany({
+      where,
+      orderBy: [
+        { orderIndex: "asc" },
+        { title: "asc" },
+      ],
+    });
 
-    query += " ORDER BY order_index ASC, title ASC";
-
-    const [rows] = await this.db.execute<RowDataPacket[]>(query, params);
-    return rows.map((row) => this.mapRowToService(row));
+    return services.map(mapPrismaToService);
   }
 
   async findBySlug(slug: string): Promise<Service | null> {
-    const query = "SELECT * FROM services WHERE slug = ? AND active = ?";
-    const [rows] = await this.db.execute<RowDataPacket[]>(query, [slug, 1]);
+    const service = await prisma.service.findFirst({
+      where: {
+        slug,
+        active: true,
+      },
+    });
 
-    if (rows.length === 0) {
+    if (!service) {
       return null;
     }
 
-    return this.mapRowToService(rows[0]);
+    return mapPrismaToService(service);
   }
 
   async findById(id: number): Promise<Service | null> {
-    const query = "SELECT * FROM services WHERE id = ?";
-    const [rows] = await this.db.execute<RowDataPacket[]>(query, [id]);
+    const service = await prisma.service.findUnique({
+      where: { id },
+    });
 
-    if (rows.length === 0) {
+    if (!service) {
       return null;
     }
 
-    return this.mapRowToService(rows[0]);
+    return mapPrismaToService(service);
   }
 
   async create(data: CreateServiceData): Promise<Service> {
-    const query = `
-      INSERT INTO services (
-        slug, title, description, content, icon, featured, active, order_index, meta_title, meta_description
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+    const service = await prisma.service.create({
+      data: {
+        slug: data.slug,
+        title: data.title,
+        description: data.description || null,
+        content: data.content || null,
+        icon: data.icon || null,
+        featured: data.featured || false,
+        active: data.active !== false,
+        orderIndex: data.order_index || 0,
+        metaTitle: data.meta_title || null,
+        metaDescription: data.meta_description || null,
+      },
+    });
 
-    const params = [
-      data.slug,
-      data.title,
-      data.description || null,
-      data.content || null,
-      data.icon || null,
-      data.featured ? 1 : 0,
-      data.active !== false ? 1 : 0,
-      data.order_index || 0,
-      data.meta_title || null,
-      data.meta_description || null,
-    ];
-
-    const [result] = await this.db.execute<ResultSetHeader>(query, params);
-    const service = await this.findById(result.insertId);
-
-    if (!service) {
-      throw new Error("Failed to retrieve created service");
-    }
-
-    return service;
+    return mapPrismaToService(service);
   }
 
   async update(data: UpdateServiceData): Promise<Service | null> {
@@ -138,67 +128,41 @@ class ServiceRepository {
       }
     }
 
-    const updates: string[] = [];
-    const params: any[] = [];
+    const updateData: any = {};
 
-    if (data.slug) {
-      updates.push("slug = ?");
-      params.push(data.slug);
-    }
-    if (data.title) {
-      updates.push("title = ?");
-      params.push(data.title);
-    }
-    if (data.description !== undefined) {
-      updates.push("description = ?");
-      params.push(data.description);
-    }
-    if (data.content !== undefined) {
-      updates.push("content = ?");
-      params.push(data.content);
-    }
-    if (data.icon !== undefined) {
-      updates.push("icon = ?");
-      params.push(data.icon);
-    }
-    if (data.featured !== undefined) {
-      updates.push("featured = ?");
-      params.push(data.featured ? 1 : 0);
-    }
-    if (data.active !== undefined) {
-      updates.push("active = ?");
-      params.push(data.active ? 1 : 0);
-    }
-    if (data.order_index !== undefined) {
-      updates.push("order_index = ?");
-      params.push(data.order_index);
-    }
-    if (data.meta_title !== undefined) {
-      updates.push("meta_title = ?");
-      params.push(data.meta_title);
-    }
-    if (data.meta_description !== undefined) {
-      updates.push("meta_description = ?");
-      params.push(data.meta_description);
-    }
+    if (data.slug) updateData.slug = data.slug;
+    if (data.title) updateData.title = data.title;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.content !== undefined) updateData.content = data.content;
+    if (data.icon !== undefined) updateData.icon = data.icon;
+    if (data.featured !== undefined) updateData.featured = data.featured;
+    if (data.active !== undefined) updateData.active = data.active;
+    if (data.order_index !== undefined) updateData.orderIndex = data.order_index;
+    if (data.meta_title !== undefined) updateData.metaTitle = data.meta_title;
+    if (data.meta_description !== undefined) updateData.metaDescription = data.meta_description;
 
-    if (updates.length === 0) {
+    if (Object.keys(updateData).length === 0) {
       return existingService;
     }
 
-    params.push(data.id);
-    const query = `UPDATE services SET ${updates.join(", ")} WHERE id = ?`;
+    const service = await prisma.service.update({
+      where: { id: data.id },
+      data: updateData,
+    });
 
-    await this.db.execute(query, params);
-    return this.findById(data.id);
+    return mapPrismaToService(service);
   }
 
   async delete(id: number): Promise<boolean> {
-    const query = "DELETE FROM services WHERE id = ?";
-    const [result] = await this.db.execute<ResultSetHeader>(query, [id]);
-    return result.affectedRows > 0;
+    try {
+      await prisma.service.delete({
+        where: { id },
+      });
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }
 
 export default new ServiceRepository();
-

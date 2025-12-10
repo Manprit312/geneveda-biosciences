@@ -45,3 +45,10 @@ async function getHandler(req: NextRequest) {
 
 export const GET = requireAdmin(getHandler);
 
+
+
+
+
+
+
+

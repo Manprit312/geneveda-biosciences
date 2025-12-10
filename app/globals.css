@@ -181,17 +181,13 @@ html.dark {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  transition: background 0.3s ease, -webkit-background-clip 0.3s ease, background-clip 0.3s ease;
-  display: inline-block;
 }
 
-.dark .gradient-text,
-html.dark .gradient-text,
-[data-theme="dark"] .gradient-text {
-  background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #60a5fa 100%) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
+.dark .gradient-text {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Premium button styles */

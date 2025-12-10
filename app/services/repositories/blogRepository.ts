@@ -1,7 +1,6 @@
 import "server-only";
-
-import getDBConnection from "@/lib/db/connection";
-import { RowDataPacket, ResultSetHeader } from "mysql2";
+import { prisma } from "@/lib/db/prisma";
+import { BlogCategory } from "@prisma/client";
 
 export interface Blog {
   id: number;
@@ -42,51 +41,62 @@ export interface UpdateBlogData extends Partial<CreateBlogData> {
   id: number;
 }
 
+// Helper to convert Prisma BlogCategory enum to string
+const categoryToString = (cat: BlogCategory): string => {
+  const map: Record<BlogCategory, string> = {
+    Research: "Research",
+    NGS: "NGS",
+    Bioinformatics: "Bioinformatics",
+    Training: "Training",
+    StudyAbroad: "Study Abroad",
+  };
+  return map[cat] || cat;
+};
+
+// Helper to convert string to Prisma BlogCategory enum
+const stringToCategory = (cat: string): BlogCategory => {
+  const map: Record<string, BlogCategory> = {
+    Research: "Research",
+    NGS: "NGS",
+    Bioinformatics: "Bioinformatics",
+    Training: "Training",
+    "Study Abroad": "StudyAbroad",
+  };
+  return (map[cat] || "Research") as BlogCategory;
+};
+
+// Convert Prisma blog to Blog interface
+const mapPrismaToBlog = (prismaBlog: any): Blog => {
+  const tags = prismaBlog.tags
+    ? Array.isArray(prismaBlog.tags)
+      ? prismaBlog.tags
+      : typeof prismaBlog.tags === "string"
+      ? JSON.parse(prismaBlog.tags)
+      : []
+    : [];
+
+  return {
+    id: prismaBlog.id,
+    title: prismaBlog.title,
+    slug: prismaBlog.slug,
+    excerpt: prismaBlog.excerpt,
+    content: prismaBlog.content,
+    author: prismaBlog.author,
+    author_role: prismaBlog.authorRole || "",
+    category: categoryToString(prismaBlog.category),
+    tags: Array.isArray(tags) ? tags : [],
+    image: prismaBlog.image || undefined,
+    read_time: prismaBlog.readTime,
+    featured: prismaBlog.featured,
+    published: prismaBlog.published,
+    published_at: prismaBlog.publishedAt,
+    views: prismaBlog.views,
+    created_at: prismaBlog.createdAt,
+    updated_at: prismaBlog.updatedAt,
+  };
+};
+
 class BlogRepository {
-  private db = getDBConnection();
-
-  // Convert database row to Blog object
-  private mapRowToBlog(row: any): Blog {
-    // Safely parse tags JSON
-    let tags: string[] = [];
-    if (row.tags) {
-      try {
-        // If tags is already an array (from MySQL JSON type), use it directly
-        if (Array.isArray(row.tags)) {
-          tags = row.tags;
-        } else if (typeof row.tags === 'string') {
-          // Try to parse as JSON string
-          const parsed = JSON.parse(row.tags);
-          tags = Array.isArray(parsed) ? parsed : [];
-        }
-      } catch (error) {
-        // If parsing fails, treat as empty array
-        console.warn(`Failed to parse tags for blog ${row.id}:`, error);
-        tags = [];
-      }
-    }
-
-    return {
-      id: row.id,
-      title: row.title,
-      slug: row.slug,
-      excerpt: row.excerpt,
-      content: row.content,
-      author: row.author,
-      author_role: row.author_role || "",
-      category: row.category,
-      tags: tags,
-      image: row.image || undefined,
-      read_time: row.read_time,
-      featured: Boolean(row.featured),
-      published: Boolean(row.published),
-      published_at: row.published_at,
-      views: row.views || 0,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-    };
-  }
-
   // Get all blogs with filters
   async findAll(filters: {
     category?: string;
@@ -97,104 +107,96 @@ class BlogRepository {
     sortBy?: string;
     sortOrder?: "asc" | "desc";
   }): Promise<Blog[]> {
-    let query = "SELECT * FROM blogs WHERE 1=1";
-    const params: any[] = [];
+    const where: any = {};
 
     if (filters.category && filters.category !== "All") {
-      query += " AND category = ?";
-      params.push(filters.category);
+      where.category = stringToCategory(filters.category);
     }
 
     if (filters.featured === true) {
-      query += " AND featured = ?";
-      params.push(1);
+      where.featured = true;
     }
 
     if (filters.published !== undefined) {
-      query += " AND published = ?";
-      params.push(filters.published ? 1 : 0);
+      where.published = filters.published;
     } else {
-      query += " AND published = ?";
-      params.push(1);
+      where.published = true;
     }
 
     if (filters.search) {
-      query += " AND (title LIKE ? OR excerpt LIKE ? OR content LIKE ?)";
-      const searchTerm = `%${filters.search}%`;
-      params.push(searchTerm, searchTerm, searchTerm);
+      where.OR = [
+        { title: { contains: filters.search } },
+        { excerpt: { contains: filters.search } },
+        { content: { contains: filters.search } },
+      ];
     }
 
-    const sortBy = filters.sortBy || "published_at";
+    const orderBy: any = {};
+    const sortBy = filters.sortBy || "publishedAt";
     const sortOrder = filters.sortOrder || "desc";
-    query += ` ORDER BY ${sortBy} ${sortOrder.toUpperCase()}`;
+    orderBy[sortBy] = sortOrder;
 
-    if (filters.limit) {
-      query += " LIMIT ?";
-      params.push(filters.limit);
-    }
+    const blogs = await prisma.blog.findMany({
+      where,
+      orderBy,
+      take: filters.limit,
+    });
 
-    const [rows] = await this.db.execute<RowDataPacket[]>(query, params);
-    return rows.map((row) => this.mapRowToBlog(row));
+    return blogs.map(mapPrismaToBlog);
   }
 
   // Get blog by slug
   async findBySlug(slug: string): Promise<Blog | null> {
-    const query = "SELECT * FROM blogs WHERE slug = ? AND published = ?";
-    const [rows] = await this.db.execute<RowDataPacket[]>(query, [slug, 1]);
+    const blog = await prisma.blog.findFirst({
+      where: {
+        slug,
+        published: true,
+      },
+    });
 
-    if (rows.length === 0) {
+    if (!blog) {
       return null;
     }
 
-    return this.mapRowToBlog(rows[0]);
+    return mapPrismaToBlog(blog);
   }
 
   // Get blog by ID
   async findById(id: number): Promise<Blog | null> {
-    const query = "SELECT * FROM blogs WHERE id = ?";
-    const [rows] = await this.db.execute<RowDataPacket[]>(query, [id]);
+    const blog = await prisma.blog.findUnique({
+      where: { id },
+    });
 
-    if (rows.length === 0) {
+    if (!blog) {
       return null;
     }
 
-    return this.mapRowToBlog(rows[0]);
+    return mapPrismaToBlog(blog);
   }
 
   // Create new blog
   async create(data: CreateBlogData): Promise<Blog> {
-    const query = `
-      INSERT INTO blogs (
-        title, slug, excerpt, content, author, author_role, category,
-        tags, image, read_time, featured, published, published_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    const tagsJson = JSON.stringify(data.tags || []);
     const publishedAt = data.published !== false ? new Date() : null;
 
-    const params = [
-      data.title,
-      data.slug,
-      data.excerpt,
-      data.content,
-      data.author,
-      data.authorRole || "",
-      data.category,
-      tagsJson,
-      data.image || null,
-      data.readTime || "5 min read",
-      data.featured ? 1 : 0,
-      data.published !== false ? 1 : 0,
-      publishedAt,
-    ];
+    const blog = await prisma.blog.create({
+      data: {
+        title: data.title,
+        slug: data.slug,
+        excerpt: data.excerpt,
+        content: data.content,
+        author: data.author,
+        authorRole: data.authorRole || "",
+        category: stringToCategory(data.category),
+        tags: data.tags || [],
+        image: data.image || null,
+        readTime: data.readTime || "5 min read",
+        featured: data.featured || false,
+        published: data.published !== false,
+        publishedAt,
+      },
+    });
 
-    const [result] = await this.db.execute<ResultSetHeader>(query, params);
-    const blog = await this.findById(result.insertId);
-    if (!blog) {
-      throw new Error("Failed to retrieve created blog");
-    }
-    return blog;
+    return mapPrismaToBlog(blog);
   }
 
   // Update blog
@@ -212,84 +214,60 @@ class BlogRepository {
       }
     }
 
-    const updates: string[] = [];
-    const params: any[] = [];
+    const updateData: any = {};
 
-    if (data.title) {
-      updates.push("title = ?");
-      params.push(data.title);
-    }
-    if (data.slug) {
-      updates.push("slug = ?");
-      params.push(data.slug);
-    }
-    if (data.excerpt) {
-      updates.push("excerpt = ?");
-      params.push(data.excerpt);
-    }
-    if (data.content) {
-      updates.push("content = ?");
-      params.push(data.content);
-    }
-    if (data.author) {
-      updates.push("author = ?");
-      params.push(data.author);
-    }
-    if (data.authorRole !== undefined) {
-      updates.push("author_role = ?");
-      params.push(data.authorRole);
-    }
-    if (data.category) {
-      updates.push("category = ?");
-      params.push(data.category);
-    }
-    if (data.tags !== undefined) {
-      updates.push("tags = ?");
-      params.push(JSON.stringify(data.tags));
-    }
-    if (data.image !== undefined) {
-      updates.push("image = ?");
-      params.push(data.image);
-    }
-    if (data.readTime) {
-      updates.push("read_time = ?");
-      params.push(data.readTime);
-    }
-    if (data.featured !== undefined) {
-      updates.push("featured = ?");
-      params.push(data.featured ? 1 : 0);
-    }
+    if (data.title) updateData.title = data.title;
+    if (data.slug) updateData.slug = data.slug;
+    if (data.excerpt) updateData.excerpt = data.excerpt;
+    if (data.content) updateData.content = data.content;
+    if (data.author) updateData.author = data.author;
+    if (data.authorRole !== undefined) updateData.authorRole = data.authorRole;
+    if (data.category) updateData.category = stringToCategory(data.category);
+    if (data.tags !== undefined) updateData.tags = data.tags;
+    if (data.image !== undefined) updateData.image = data.image;
+    if (data.readTime) updateData.readTime = data.readTime;
+    if (data.featured !== undefined) updateData.featured = data.featured;
     if (data.published !== undefined) {
-      updates.push("published = ?");
-      params.push(data.published ? 1 : 0);
+      updateData.published = data.published;
       if (data.published && !existingBlog.published_at) {
-        updates.push("published_at = ?");
-        params.push(new Date());
+        updateData.publishedAt = new Date();
       }
     }
 
-    if (updates.length === 0) {
+    if (Object.keys(updateData).length === 0) {
       return existingBlog;
     }
 
-    params.push(data.id);
-    const query = `UPDATE blogs SET ${updates.join(", ")} WHERE id = ?`;
+    const blog = await prisma.blog.update({
+      where: { id: data.id },
+      data: updateData,
+    });
 
-    await this.db.execute(query, params);
-    return this.findById(data.id);
+    return mapPrismaToBlog(blog);
   }
 
   // Delete blog
   async delete(id: number): Promise<boolean> {
-    const query = "DELETE FROM blogs WHERE id = ?";
-    const [result] = await this.db.execute<ResultSetHeader>(query, [id]);
-    return result.affectedRows > 0;
+    try {
+      await prisma.blog.delete({
+        where: { id },
+      });
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
   // Increment views
   async incrementViews(slug: string): Promise<void> {
-    const query = "UPDATE blogs SET views = views + 1 WHERE slug = ?";
-    await this.db.execute(query, [slug]);
+    await prisma.blog.updateMany({
+      where: { slug },
+      data: {
+        views: {
+          increment: 1,
+        },
+      },
+    });
   }
 
   // Get blog statistics
@@ -300,32 +278,28 @@ class BlogRepository {
     totalViews: number;
     categoryCounts: { category: string; count: number }[];
   }> {
-    const [totalRows] = await this.db.execute<RowDataPacket[]>(
-      "SELECT COUNT(*) as count FROM blogs"
-    );
-    const total = totalRows[0].count;
+    const [total, published, featured, viewsResult, categoryResult] =
+      await Promise.all([
+        prisma.blog.count(),
+        prisma.blog.count({ where: { published: true } }),
+        prisma.blog.count({ where: { featured: true } }),
+        prisma.blog.aggregate({
+          _sum: {
+            views: true,
+          },
+        }),
+        prisma.blog.groupBy({
+          by: ["category"],
+          _count: {
+            id: true,
+          },
+        }),
+      ]);
 
-    const [publishedRows] = await this.db.execute<RowDataPacket[]>(
-      "SELECT COUNT(*) as count FROM blogs WHERE published = 1"
-    );
-    const published = publishedRows[0].count;
-
-    const [featuredRows] = await this.db.execute<RowDataPacket[]>(
-      "SELECT COUNT(*) as count FROM blogs WHERE featured = 1"
-    );
-    const featured = featuredRows[0].count;
-
-    const [viewsRows] = await this.db.execute<RowDataPacket[]>(
-      "SELECT SUM(views) as total FROM blogs"
-    );
-    const totalViews = viewsRows[0].total || 0;
-
-    const [categoryRows] = await this.db.execute<RowDataPacket[]>(
-      "SELECT category, COUNT(*) as count FROM blogs GROUP BY category"
-    );
-    const categoryCounts = categoryRows.map((row) => ({
-      category: row.category,
-      count: row.count,
+    const totalViews = viewsResult._sum.views || 0;
+    const categoryCounts = categoryResult.map((item) => ({
+      category: categoryToString(item.category),
+      count: item._count.id,
     }));
 
     return {
@@ -339,4 +313,3 @@ class BlogRepository {
 }
 
 export default new BlogRepository();
-

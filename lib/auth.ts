@@ -2,8 +2,7 @@ import "server-only";
 
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import getDBConnection from "./db/connection";
-import { RowDataPacket } from "mysql2";
+import { prisma } from "./db/prisma";
 
 export interface Admin {
   id: number;
@@ -49,42 +48,50 @@ export function verifyToken(token: string): { id: number; role: string } | null 
 
 // Get admin by ID
 export async function getAdminById(id: number): Promise<Admin | null> {
-  const db = getDBConnection();
-  const query = "SELECT id, username, email, name, role, active FROM admins WHERE id = ? AND active = TRUE";
-  const [rows] = await db.execute<RowDataPacket[]>(query, [id]);
+  const admin = await prisma.admin.findUnique({
+    where: { id, active: true },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      name: true,
+      role: true,
+      active: true,
+    },
+  });
 
-  if (rows.length === 0) {
+  if (!admin) {
     return null;
   }
 
   return {
-    id: rows[0].id,
-    username: rows[0].username,
-    email: rows[0].email,
-    name: rows[0].name,
-    role: rows[0].role,
-    active: Boolean(rows[0].active),
+    id: admin.id,
+    username: admin.username,
+    email: admin.email,
+    name: admin.name,
+    role: admin.role,
+    active: admin.active,
   };
 }
 
 // Get admin by email
 export async function getAdminByEmail(email: string): Promise<(Admin & { password_hash: string }) | null> {
-  const db = getDBConnection();
-  const query = "SELECT id, username, email, name, role, active, password_hash FROM admins WHERE email = ?";
-  const [rows] = await db.execute<RowDataPacket[]>(query, [email]);
+  const admin = await prisma.admin.findUnique({
+    where: { email },
+  });
 
-  if (rows.length === 0) {
+  if (!admin) {
     return null;
   }
 
   return {
-    id: rows[0].id,
-    username: rows[0].username,
-    email: rows[0].email,
-    name: rows[0].name,
-    role: rows[0].role,
-    active: Boolean(rows[0].active),
-    password_hash: rows[0].password_hash,
+    id: admin.id,
+    username: admin.username,
+    email: admin.email,
+    name: admin.name,
+    role: admin.role,
+    active: admin.active,
+    password_hash: admin.passwordHash,
   };
 }
 
@@ -96,36 +103,42 @@ export async function createAdmin(
   name: string,
   role: "admin" | "superadmin" = "admin"
 ): Promise<Admin> {
-  const db = getDBConnection();
-  const password_hash = await hashPassword(password);
+  const passwordHash = await hashPassword(password);
 
-  const query = `
-    INSERT INTO admins (username, email, password_hash, name, role)
-    VALUES (?, ?, ?, ?, ?)
-  `;
+  const admin = await prisma.admin.create({
+    data: {
+      username,
+      email,
+      passwordHash,
+      name,
+      role,
+    },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      name: true,
+      role: true,
+      active: true,
+    },
+  });
 
-  const [result] = await db.execute<RowDataPacket[]>(query, [
-    username,
-    email,
-    password_hash,
-    name,
-    role,
-  ]);
-
-  const adminId = (result as any).insertId;
-  const admin = await getAdminById(adminId);
-
-  if (!admin) {
-    throw new Error("Failed to create admin");
-  }
-
-  return admin;
+  return {
+    id: admin.id,
+    username: admin.username,
+    email: admin.email,
+    name: admin.name,
+    role: admin.role,
+    active: admin.active,
+  };
 }
 
 // Update admin last login
 export async function updateAdminLastLogin(id: number): Promise<void> {
-  const db = getDBConnection();
-  const query = "UPDATE admins SET last_login = NOW() WHERE id = ?";
-  await db.execute(query, [id]);
+  await prisma.admin.update({
+    where: { id },
+    data: {
+      lastLogin: new Date(),
+    },
+  });
 }
-

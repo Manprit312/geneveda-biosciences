@@ -1,7 +1,5 @@
 import "server-only";
-
-import getDBConnection from "@/lib/db/connection";
-import { RowDataPacket, ResultSetHeader } from "mysql2";
+import { prisma } from "@/lib/db/prisma";
 
 export interface SiteSetting {
   id: number;
@@ -24,47 +22,52 @@ export interface UpdateSiteSettingData extends Partial<CreateSiteSettingData> {
   id: number;
 }
 
+// Convert Prisma siteSetting to SiteSetting interface
+const mapPrismaToSiteSetting = (prismaSetting: any): SiteSetting => {
+  return {
+    id: prismaSetting.id,
+    setting_key: prismaSetting.settingKey,
+    setting_value: prismaSetting.settingValue,
+    setting_type: prismaSetting.settingType,
+    description: prismaSetting.description,
+    created_at: prismaSetting.createdAt,
+    updated_at: prismaSetting.updatedAt,
+  };
+};
+
 class SiteSettingsRepository {
-  private db = getDBConnection();
-
-  private mapRowToSiteSetting(row: any): SiteSetting {
-    return {
-      id: row.id,
-      setting_key: row.setting_key,
-      setting_value: row.setting_value,
-      setting_type: row.setting_type || "text",
-      description: row.description,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-    };
-  }
-
   async findAll(): Promise<SiteSetting[]> {
-    const query = "SELECT * FROM site_settings ORDER BY setting_key ASC";
-    const [rows] = await this.db.execute<RowDataPacket[]>(query);
-    return rows.map((row) => this.mapRowToSiteSetting(row));
+    const settings = await prisma.siteSetting.findMany({
+      orderBy: {
+        settingKey: "asc",
+      },
+    });
+
+    return settings.map(mapPrismaToSiteSetting);
   }
 
   async findByKey(key: string): Promise<SiteSetting | null> {
-    const query = "SELECT * FROM site_settings WHERE setting_key = ?";
-    const [rows] = await this.db.execute<RowDataPacket[]>(query, [key]);
+    const setting = await prisma.siteSetting.findUnique({
+      where: { settingKey: key },
+    });
 
-    if (rows.length === 0) {
+    if (!setting) {
       return null;
     }
 
-    return this.mapRowToSiteSetting(rows[0]);
+    return mapPrismaToSiteSetting(setting);
   }
 
   async findById(id: number): Promise<SiteSetting | null> {
-    const query = "SELECT * FROM site_settings WHERE id = ?";
-    const [rows] = await this.db.execute<RowDataPacket[]>(query, [id]);
+    const setting = await prisma.siteSetting.findUnique({
+      where: { id },
+    });
 
-    if (rows.length === 0) {
+    if (!setting) {
       return null;
     }
 
-    return this.mapRowToSiteSetting(rows[0]);
+    return mapPrismaToSiteSetting(setting);
   }
 
   async getValue(key: string, defaultValue: any = null): Promise<any> {
@@ -89,9 +92,11 @@ class SiteSettingsRepository {
     }
   }
 
-  async setValue(key: string, value: any, type: "text" | "number" | "boolean" | "json" = "text"): Promise<SiteSetting> {
-    const existing = await this.findByKey(key);
-
+  async setValue(
+    key: string,
+    value: any,
+    type: "text" | "number" | "boolean" | "json" = "text"
+  ): Promise<SiteSetting> {
     let stringValue: string;
     if (type === "json") {
       stringValue = JSON.stringify(value);
@@ -101,41 +106,45 @@ class SiteSettingsRepository {
       stringValue = String(value);
     }
 
-    if (existing) {
-      const query = "UPDATE site_settings SET setting_value = ?, setting_type = ? WHERE setting_key = ?";
-      await this.db.execute(query, [stringValue, type, key]);
-      return (await this.findByKey(key))!;
-    } else {
-      const query = `
-        INSERT INTO site_settings (setting_key, setting_value, setting_type)
-        VALUES (?, ?, ?)
-      `;
-      await this.db.execute<ResultSetHeader>(query, [key, stringValue, type]);
-      return (await this.findByKey(key))!;
-    }
+    const setting = await prisma.siteSetting.upsert({
+      where: { settingKey: key },
+      update: {
+        settingValue: stringValue,
+        settingType: type,
+      },
+      create: {
+        settingKey: key,
+        settingValue: stringValue,
+        settingType: type,
+      },
+    });
+
+    return mapPrismaToSiteSetting(setting);
   }
 
   async create(data: CreateSiteSettingData): Promise<SiteSetting> {
-    const query = `
-      INSERT INTO site_settings (setting_key, setting_value, setting_type, description)
-      VALUES (?, ?, ?, ?)
-    `;
-
-    const params = [
-      data.setting_key,
-      data.setting_value || null,
-      data.setting_type || "text",
-      data.description || null,
-    ];
-
-    const [result] = await this.db.execute<ResultSetHeader>(query, params);
-    const setting = await this.findById(result.insertId);
-
-    if (!setting) {
-      throw new Error("Failed to retrieve created site setting");
+    let stringValue: string | null = null;
+    if (data.setting_value) {
+      const type = data.setting_type || "text";
+      if (type === "json") {
+        stringValue = JSON.stringify(data.setting_value);
+      } else if (type === "boolean") {
+        stringValue = data.setting_value === "true" || data.setting_value === "1" ? "true" : "false";
+      } else {
+        stringValue = String(data.setting_value);
+      }
     }
 
-    return setting;
+    const setting = await prisma.siteSetting.create({
+      data: {
+        settingKey: data.setting_key,
+        settingValue: stringValue,
+        settingType: data.setting_type || "text",
+        description: data.description || null,
+      },
+    });
+
+    return mapPrismaToSiteSetting(setting);
   }
 
   async update(data: UpdateSiteSettingData): Promise<SiteSetting | null> {
@@ -144,43 +153,44 @@ class SiteSettingsRepository {
       return null;
     }
 
-    const updates: string[] = [];
-    const params: any[] = [];
+    const updateData: any = {};
 
-    if (data.setting_key) {
-      updates.push("setting_key = ?");
-      params.push(data.setting_key);
-    }
+    if (data.setting_key) updateData.settingKey = data.setting_key;
     if (data.setting_value !== undefined) {
-      updates.push("setting_value = ?");
-      params.push(data.setting_value);
+      const type = data.setting_type || existingSetting.setting_type;
+      if (type === "json") {
+        updateData.settingValue = JSON.stringify(data.setting_value);
+      } else if (type === "boolean") {
+        updateData.settingValue = data.setting_value === "true" || data.setting_value === "1" ? "true" : "false";
+      } else {
+        updateData.settingValue = String(data.setting_value);
+      }
     }
-    if (data.setting_type) {
-      updates.push("setting_type = ?");
-      params.push(data.setting_type);
-    }
-    if (data.description !== undefined) {
-      updates.push("description = ?");
-      params.push(data.description);
-    }
+    if (data.setting_type) updateData.settingType = data.setting_type;
+    if (data.description !== undefined) updateData.description = data.description;
 
-    if (updates.length === 0) {
+    if (Object.keys(updateData).length === 0) {
       return existingSetting;
     }
 
-    params.push(data.id);
-    const query = `UPDATE site_settings SET ${updates.join(", ")} WHERE id = ?`;
+    const setting = await prisma.siteSetting.update({
+      where: { id: data.id },
+      data: updateData,
+    });
 
-    await this.db.execute(query, params);
-    return this.findById(data.id);
+    return mapPrismaToSiteSetting(setting);
   }
 
   async delete(id: number): Promise<boolean> {
-    const query = "DELETE FROM site_settings WHERE id = ?";
-    const [result] = await this.db.execute<ResultSetHeader>(query, [id]);
-    return result.affectedRows > 0;
+    try {
+      await prisma.siteSetting.delete({
+        where: { id },
+      });
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }
 
 export default new SiteSettingsRepository();
-
