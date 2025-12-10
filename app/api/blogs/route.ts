@@ -1,31 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import blogService from "@/app/services/blogService";
-import { initializeDatabase } from "@/lib/db/migrations";
-
-// Initialize database on first request
-let dbInitialized = false;
-let dbInitError: Error | null = null;
-
-const initDB = async () => {
-  if (dbInitError) {
-    throw dbInitError; // Don't retry if already failed
-  }
-  if (!dbInitialized) {
-    try {
-      await initializeDatabase();
-      dbInitialized = true;
-    } catch (error: any) {
-      dbInitError = error;
-      console.error("⚠️  Database initialization failed. Using fallback mode.");
-      throw error;
-    }
-  }
-};
 
 // GET - Fetch all blog posts
 export async function GET(request: NextRequest) {
   try {
-    await initDB();
 
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
@@ -93,7 +71,6 @@ export async function GET(request: NextRequest) {
 // POST - Create new blog post (protected - add auth later)
 export async function POST(request: NextRequest) {
   try {
-    await initDB();
 
     const body = await request.json();
     const {
@@ -105,6 +82,7 @@ export async function POST(request: NextRequest) {
       authorRole,
       category,
       tags,
+      image,
       readTime,
       featured,
       published,
@@ -126,6 +104,7 @@ export async function POST(request: NextRequest) {
       authorRole,
       category,
       tags: tagsArray,
+      image,
       readTime,
       featured,
       published,

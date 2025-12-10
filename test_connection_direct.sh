@@ -1,0 +1,10 @@
+#!/bin/bash
+echo "Testing direct PostgreSQL connection..."
+echo ""
+echo "If psql is installed locally, run:"
+echo "PGPASSWORD='GeneVeda2025!Secure' psql -h 40.192.24.24 -U geneveda_user -d geneveda_biosciences -c \"SELECT version();\""
+echo ""
+echo "Or test with telnet (if installed):"
+echo "telnet 40.192.24.24 5432"
+echo ""
+echo "If connection times out, it's likely a cloud provider firewall issue."

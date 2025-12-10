@@ -1,0 +1,11 @@
+#!/bin/bash
+echo "Run these on the server:"
+echo ""
+echo "1. Check listening ports (using ss instead of netstat):"
+echo "   sudo ss -tlnp | grep 5432"
+echo ""
+echo "2. Test local connection:"
+echo "   PGPASSWORD='GeneVeda2025!Secure' psql -h localhost -U geneveda_user -d geneveda_biosciences -c \"SELECT version();\""
+echo ""
+echo "3. Check PostgreSQL status:"
+echo "   sudo systemctl status postgresql | head -10"

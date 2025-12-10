@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import Image from "next/image";
+import { ArrowLeft, X, Upload } from "lucide-react";
 
 export default function EditBlogPage() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function EditBlogPage() {
   const id = params.id as string;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
@@ -26,6 +28,7 @@ export default function EditBlogPage() {
     published: true,
   });
   const [tagInput, setTagInput] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     fetchBlog();
@@ -37,6 +40,7 @@ export default function EditBlogPage() {
       const data = await response.json();
       if (data.success && data.blog) {
         const blog = data.blog;
+        const imageUrl = blog.image || "";
         setFormData({
           title: blog.title || "",
           slug: blog.slug || "",
@@ -46,17 +50,75 @@ export default function EditBlogPage() {
           authorRole: blog.authorRole || "",
           category: blog.category || "Research",
           tags: blog.tags || [],
-          image: blog.image || "",
+          image: imageUrl,
           readTime: blog.readTime || "5 min read",
           featured: blog.featured || false,
           published: blog.published !== false,
         });
+        // Set preview if image exists
+        if (imageUrl) {
+          setImagePreview(imageUrl);
+        }
       }
     } catch (error) {
       console.error("Error fetching blog:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Show preview immediately
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload to Cloudinary
+    setUploading(true);
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: uploadFormData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setFormData({ ...formData, image: data.url });
+      } else {
+        alert(data.message || "Failed to upload image");
+        // Revert preview if upload fails
+        if (formData.image) {
+          setImagePreview(formData.image);
+        } else {
+          setImagePreview(null);
+        }
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("Error uploading image");
+      // Revert preview if upload fails
+      if (formData.image) {
+        setImagePreview(formData.image);
+      } else {
+        setImagePreview(null);
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeImage = () => {
+    setFormData({ ...formData, image: "" });
+    setImagePreview(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -109,6 +171,8 @@ export default function EditBlogPage() {
     );
   }
 
+  const displayImage = imagePreview || formData.image;
+
   return (
     <div>
       <div className="flex items-center gap-4 mb-6">
@@ -122,7 +186,6 @@ export default function EditBlogPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
-        {/* Same form fields as new page */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -204,18 +267,60 @@ export default function EditBlogPage() {
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Image URL
-            </label>
-            <input
-              type="url"
-              value={formData.image}
-              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            />
-          </div>
+        {/* Image Upload Section */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Blog Image
+          </label>
+          {!displayImage ? (
+            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                disabled={uploading}
+                className="hidden"
+                id="image-upload"
+              />
+              <label
+                htmlFor="image-upload"
+                className="flex flex-col items-center justify-center cursor-pointer"
+              >
+                <Upload className="w-12 h-12 text-gray-400 mb-2" />
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {uploading ? "Uploading..." : "Click to upload or drag and drop"}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  PNG, JPG, GIF up to 10MB
+                </p>
+              </label>
+            </div>
+          ) : (
+            <div className="relative w-full max-w-2xl border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+              <Image
+                src={displayImage}
+                alt="Blog preview"
+                width={800}
+                height={400}
+                className="w-full h-auto object-cover"
+              />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-lg transition-colors"
+                title="Remove image"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              {uploading && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                  <div className="text-white">Uploading...</div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div>
@@ -309,7 +414,7 @@ export default function EditBlogPage() {
         <div className="flex gap-4">
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || uploading}
             className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold disabled:opacity-50"
           >
             {saving ? "Saving..." : "Save Changes"}
@@ -325,11 +430,3 @@ export default function EditBlogPage() {
     </div>
   );
 }
-
-
-
-
-
-
-
-

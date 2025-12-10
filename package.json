@@ -23,16 +23,21 @@
     "setup-cloud-db": "node scripts/setup-cloud-db.js",
     "create-admin": "node scripts/create-admin.js",
     "create-admin-prisma": "node scripts/create-admin-prisma.js",
-    "check-admin": "node scripts/check-admin.js"
+    "check-admin": "node scripts/check-admin.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:push": "prisma db push",
+    "prisma:studio": "prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",
     "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.8.0",
     "framer-motion": "^12.23.25",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.555.0",
-    "mysql2": "^3.15.3",
     "next": "^16.0.7",
+    "next-cloudinary": "^6.17.5",
     "prisma": "^6.19.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",

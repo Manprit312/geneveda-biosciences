@@ -28,7 +28,6 @@ export interface UpdatePageContentData extends Partial<CreatePageContentData> {
   id: number;
 }
 
-// Convert Prisma pageContent to PageContent interface
 const mapPrismaToPageContent = (prismaContent: any): PageContent => {
   return {
     id: prismaContent.id,

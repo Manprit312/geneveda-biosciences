@@ -1,15 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import blogService from "@/app/services/blogService";
-import { initializeDatabase } from "@/lib/db/migrations";
-
-// Initialize database on first request
-let dbInitialized = false;
-const initDB = async () => {
-  if (!dbInitialized) {
-    await initializeDatabase();
-    dbInitialized = true;
-  }
-};
 
 // GET - Fetch single blog post by slug
 export async function GET(
@@ -17,7 +7,6 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    await initDB();
 
     const { slug } = await params;
     const blog = await blogService.getBlogBySlug(slug);

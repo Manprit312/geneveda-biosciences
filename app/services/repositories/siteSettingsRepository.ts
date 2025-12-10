@@ -22,7 +22,6 @@ export interface UpdateSiteSettingData extends Partial<CreateSiteSettingData> {
   id: number;
 }
 
-// Convert Prisma siteSetting to SiteSetting interface
 const mapPrismaToSiteSetting = (prismaSetting: any): SiteSetting => {
   return {
     id: prismaSetting.id,

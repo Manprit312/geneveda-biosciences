@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -288,6 +289,24 @@ export default function BlogPostPage() {
           <ArrowLeft className="w-4 h-4" />
           Back to Blog
         </Link>
+
+        {/* Blog Image */}
+        {post.image && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 rounded-xl overflow-hidden"
+          >
+            <Image
+              src={post.image}
+              alt={post.title}
+              width={1200}
+              height={600}
+              className="w-full h-auto object-cover"
+              unoptimized={!post.image.includes('cloudinary.com')}
+            />
+          </motion.div>
+        )}
 
         {/* Header */}
         <motion.div

@@ -1,16 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import blogService from "@/app/services/blogService";
-import { initializeDatabase } from "@/lib/db/migrations";
 import { requireAdmin } from "@/lib/middleware/auth";
-
-// Initialize database on first request
-let dbInitialized = false;
-const initDB = async () => {
-  if (!dbInitialized) {
-    await initializeDatabase();
-    dbInitialized = true;
-  }
-};
 
 // GET - Fetch blog post by ID (for admin)
 async function getHandler(
@@ -19,7 +9,6 @@ async function getHandler(
   id: string
 ) {
   try {
-    await initDB();
 
     const blog = await blogService.getBlogById(Number(id));
 
@@ -76,7 +65,6 @@ async function putHandler(
   id: string
 ) {
   try {
-    await initDB();
 
     const body = await request.json();
     const {
@@ -88,6 +76,7 @@ async function putHandler(
       authorRole,
       category,
       tags,
+      image,
       readTime,
       featured,
       published,
@@ -110,6 +99,7 @@ async function putHandler(
       authorRole,
       category,
       tags: tagsArray,
+      image,
       readTime,
       featured,
       published,
@@ -160,7 +150,6 @@ async function deleteHandler(
   id: string
 ) {
   try {
-    await initDB();
 
     const deleted = await blogService.deleteBlog(Number(id));
 

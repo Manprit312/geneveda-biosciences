@@ -34,7 +34,6 @@ export interface UpdateServiceData extends Partial<CreateServiceData> {
   id: number;
 }
 
-// Convert Prisma service to Service interface
 const mapPrismaToService = (prismaService: any): Service => {
   return {
     id: prismaService.id,
@@ -120,7 +119,6 @@ class ServiceRepository {
       return null;
     }
 
-    // Check if slug is being changed and if it already exists
     if (data.slug && data.slug !== existingService.slug) {
       const existingSlug = await this.findBySlug(data.slug);
       if (existingSlug && existingSlug.id !== data.id) {

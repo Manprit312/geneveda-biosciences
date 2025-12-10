@@ -65,6 +65,18 @@ const stringToCategory = (cat: string): BlogCategory => {
   return (map[cat] || "Research") as BlogCategory;
 };
 
+// Helper to convert snake_case field names to camelCase for Prisma
+const mapFieldNameToPrisma = (fieldName: string): string => {
+  const fieldMap: Record<string, string> = {
+    published_at: "publishedAt",
+    created_at: "createdAt",
+    updated_at: "updatedAt",
+    author_role: "authorRole",
+    read_time: "readTime",
+  };
+  return fieldMap[fieldName] || fieldName;
+};
+
 // Convert Prisma blog to Blog interface
 const mapPrismaToBlog = (prismaBlog: any): Blog => {
   const tags = prismaBlog.tags
@@ -97,7 +109,6 @@ const mapPrismaToBlog = (prismaBlog: any): Blog => {
 };
 
 class BlogRepository {
-  // Get all blogs with filters
   async findAll(filters: {
     category?: string;
     featured?: boolean;
@@ -132,7 +143,8 @@ class BlogRepository {
     }
 
     const orderBy: any = {};
-    const sortBy = filters.sortBy || "publishedAt";
+    const sortByRaw = filters.sortBy || "published_at";
+    const sortBy = mapFieldNameToPrisma(sortByRaw); // Convert to Prisma field name
     const sortOrder = filters.sortOrder || "desc";
     orderBy[sortBy] = sortOrder;
 
@@ -145,7 +157,6 @@ class BlogRepository {
     return blogs.map(mapPrismaToBlog);
   }
 
-  // Get blog by slug
   async findBySlug(slug: string): Promise<Blog | null> {
     const blog = await prisma.blog.findFirst({
       where: {
@@ -161,7 +172,6 @@ class BlogRepository {
     return mapPrismaToBlog(blog);
   }
 
-  // Get blog by ID
   async findById(id: number): Promise<Blog | null> {
     const blog = await prisma.blog.findUnique({
       where: { id },
@@ -174,7 +184,6 @@ class BlogRepository {
     return mapPrismaToBlog(blog);
   }
 
-  // Create new blog
   async create(data: CreateBlogData): Promise<Blog> {
     const publishedAt = data.published !== false ? new Date() : null;
 
@@ -199,14 +208,12 @@ class BlogRepository {
     return mapPrismaToBlog(blog);
   }
 
-  // Update blog
   async update(data: UpdateBlogData): Promise<Blog | null> {
     const existingBlog = await this.findById(data.id);
     if (!existingBlog) {
       return null;
     }
 
-    // Check if slug is being changed and if it already exists
     if (data.slug && data.slug !== existingBlog.slug) {
       const existingSlug = await this.findBySlug(data.slug);
       if (existingSlug && existingSlug.id !== data.id) {
@@ -246,7 +253,6 @@ class BlogRepository {
     return mapPrismaToBlog(blog);
   }
 
-  // Delete blog
   async delete(id: number): Promise<boolean> {
     try {
       await prisma.blog.delete({
@@ -258,7 +264,6 @@ class BlogRepository {
     }
   }
 
-  // Increment views
   async incrementViews(slug: string): Promise<void> {
     await prisma.blog.updateMany({
       where: { slug },
@@ -270,7 +275,6 @@ class BlogRepository {
     });
   }
 
-  // Get blog statistics
   async getStats(): Promise<{
     total: number;
     published: number;

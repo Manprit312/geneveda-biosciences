@@ -1,0 +1,18 @@
+You're already on the server! Just run these commands directly:
+
+1. Check if user exists:
+   sudo -u postgres psql -c "\du"
+
+2. Reset password:
+   sudo -u postgres psql -c "ALTER USER geneveda_user WITH PASSWORD 'GeneVeda2025!Secure';"
+
+   OR if ! causes issues, use simpler password:
+   sudo -u postgres psql -c "ALTER USER geneveda_user WITH PASSWORD 'GeneVeda2025Secure';"
+
+3. Grant privileges:
+   sudo -u postgres psql -d geneveda_biosciences -c "GRANT ALL ON SCHEMA public TO geneveda_user;"
+   sudo -u postgres psql -d geneveda_biosciences -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO geneveda_user;"
+   sudo -u postgres psql -d geneveda_biosciences -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO geneveda_user;"
+
+4. Test local connection:
+   PGPASSWORD='GeneVeda2025!Secure' psql -h localhost -U geneveda_user -d geneveda_biosciences -c "SELECT current_database();"

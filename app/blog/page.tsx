@@ -1,8 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-
-
+import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -310,7 +309,13 @@ export default function BlogPage() {
                   <Link href={`/blog/${post.slug}`}>
                     <div className="relative h-48 bg-gradient-to-br from-emerald-50 via-blue-50 to-emerald-100 dark:from-emerald-950/30 dark:via-blue-950/30 dark:to-emerald-900/20 overflow-hidden">
                       {post.image ? (
-                        <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                        <Image
+                          src={post.image}
+                          alt={post.title}
+                          fill
+                          className="object-cover"
+                          unoptimized={!post.image.includes('cloudinary.com')}
+                        />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
                           {getCategoryIcon(post.category)}
@@ -396,7 +401,13 @@ export default function BlogPage() {
                   <Link href={`/blog/${post.slug}`}>
                     <div className="relative h-40 bg-gradient-to-br from-emerald-50 via-blue-50 to-emerald-100 dark:from-emerald-950/30 dark:via-blue-950/30 dark:to-emerald-900/20 overflow-hidden">
                       {post.image ? (
-                        <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                        <Image
+                          src={post.image}
+                          alt={post.title}
+                          fill
+                          className="object-cover"
+                          unoptimized={!post.image.includes('cloudinary.com')}
+                        />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
                           {getCategoryIcon(post.category)}

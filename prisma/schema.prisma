@@ -1,12 +1,12 @@
 // Prisma Schema for GeneVeda Biosciences
-// Database: MySQL on Hostinger
+// Database: PostgreSQL on Server 40.192.24.24
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -18,9 +18,9 @@ model Admin {
   name         String    @db.VarChar(255)
   role         AdminRole @default(admin)
   active       Boolean   @default(true)
-  lastLogin    DateTime? @map("last_login") @db.DateTime
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+  lastLogin    DateTime? @map("last_login") @db.Timestamp
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp
 
   @@index([email])
   @@index([username])
@@ -37,7 +37,7 @@ model Blog {
   title       String     @db.VarChar(500)
   slug        String     @unique @db.VarChar(500)
   excerpt     String     @db.Text
-  content     String     @db.LongText
+  content     String     @db.Text
   author      String     @db.VarChar(255)
   authorRole  String?    @map("author_role") @default("") @db.VarChar(255)
   category    BlogCategory
@@ -46,10 +46,10 @@ model Blog {
   readTime    String     @default("5 min read") @map("read_time") @db.VarChar(50)
   featured    Boolean    @default(false)
   published   Boolean    @default(true)
-  publishedAt DateTime?  @map("published_at") @db.DateTime
+  publishedAt DateTime?  @map("published_at") @db.Timestamp
   views       Int        @default(0)
-  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamp(6)
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamp
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamp
 
   @@index([category])
   @@index([published, publishedAt])
@@ -70,15 +70,15 @@ model Service {
   slug           String   @unique @db.VarChar(255)
   title          String   @db.VarChar(500)
   description    String?  @db.Text
-  content        String?  @db.LongText
+  content        String?  @db.Text
   icon           String?  @db.VarChar(100)
   featured       Boolean  @default(false)
   active         Boolean  @default(true)
   orderIndex     Int      @default(0) @map("order_index")
   metaTitle      String?  @map("meta_title") @db.VarChar(500)
   metaDescription String? @map("meta_description") @db.Text
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp
 
   @@index([slug])
   @@index([active])
@@ -91,12 +91,12 @@ model PageContent {
   pageSlug    String         @map("page_slug") @db.VarChar(255)
   sectionKey  String         @map("section_key") @db.VarChar(255)
   title       String?        @db.VarChar(500)
-  content     String?        @db.LongText
+  content     String?        @db.Text
   contentType ContentType     @default(html) @map("content_type")
   orderIndex  Int            @default(0) @map("order_index")
   active      Boolean        @default(true)
-  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamp(6)
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamp
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamp
 
   @@unique([pageSlug, sectionKey])
   @@index([pageSlug])
@@ -113,11 +113,11 @@ enum ContentType {
 model SiteSetting {
   id          Int            @id @default(autoincrement())
   settingKey  String         @unique @map("setting_key") @db.VarChar(255)
-  settingValue String?       @map("setting_value") @db.LongText
+  settingValue String?       @map("setting_value") @db.Text
   settingType SettingType     @default(text) @map("setting_type")
   description String?        @db.Text
-  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamp(6)
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamp
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamp
 
   @@index([settingKey])
   @@map("site_settings")
@@ -129,4 +129,3 @@ enum SettingType {
   boolean
   json
 }
-
