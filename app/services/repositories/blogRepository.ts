@@ -42,15 +42,15 @@ export interface UpdateBlogData extends Partial<CreateBlogData> {
 }
 
 // Helper to convert Prisma BlogCategory enum to string
-const categoryToString = (cat: BlogCategory): string => {
-  const map: Record<BlogCategory, string> = {
+const categoryToString = (cat: BlogCategory): "Research" | "NGS" | "Bioinformatics" | "Training" | "Study Abroad" => {
+  const map: Record<BlogCategory, "Research" | "NGS" | "Bioinformatics" | "Training" | "Study Abroad"> = {
     Research: "Research",
     NGS: "NGS",
     Bioinformatics: "Bioinformatics",
     Training: "Training",
     StudyAbroad: "Study Abroad",
   };
-  return map[cat] || cat;
+  return map[cat] || "Research";
 };
 
 // Helper to convert string to Prisma BlogCategory enum
