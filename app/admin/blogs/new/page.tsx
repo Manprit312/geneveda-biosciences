@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, X, Upload } from "lucide-react";
+import RichTextEditor from "@/components/RichTextEditor";
+import "../rich-text-editor.css";
 
 export default function NewBlogPage() {
   const router = useRouter();
@@ -297,14 +299,12 @@ export default function NewBlogPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Content * (HTML/Markdown)
+            Content * (Rich Text Editor)
           </label>
-          <textarea
-            required
-            rows={15}
-            value={formData.content}
-            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"
+          <RichTextEditor
+            content={formData.content}
+            onChange={(content) => setFormData({ ...formData, content })}
+            placeholder="Start writing your blog content here..."
           />
         </div>
 
