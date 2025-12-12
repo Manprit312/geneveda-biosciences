@@ -163,3 +163,4 @@ After configuring remote access:
 2. Push schema: `npx prisma db push`
 3. Create admin: `npm run create-admin-prisma admin@geneveda.com admin123`
 
+

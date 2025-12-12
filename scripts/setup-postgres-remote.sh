@@ -54,3 +54,4 @@ echo "Test connection from local machine:"
 echo "  PGPASSWORD='GeneVeda2025!Secure' psql -h 40.192.24.24 -U geneveda_user -d geneveda_biosciences -c \"SELECT version();\""
 echo ""
 
+

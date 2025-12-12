@@ -78,3 +78,4 @@ Then update `.env.local`:
 DATABASE_URL="postgresql://geneveda_user:GeneVeda2025Secure@40.192.24.24:5432/geneveda_biosciences?sslmode=prefer"
 ```
 
+

@@ -92,3 +92,4 @@ For Vercel, add this to environment variables.
 - `POSTGRESQL_REMOTE_ACCESS.md` - Remote access setup guide
 - `scripts/setup-postgres-remote.sh` - Automated setup script
 
+

@@ -109,3 +109,4 @@ Even if SSH works without password, **sudo commands will ask for password**:
 - You need this to install PostgreSQL
 - Ask your team/client for this password if you don't know it
 
+

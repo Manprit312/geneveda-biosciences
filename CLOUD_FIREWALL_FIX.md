@@ -106,3 +106,4 @@ DATABASE_URL="postgresql://geneveda_user:GeneVeda2025%21Secure@localhost:5432/ge
 4. Create admin user
 5. Deploy to Vercel
 
+

@@ -90,3 +90,4 @@ psql -h localhost -U geneveda_user -d geneveda_biosciences
 # Password: GeneVeda2025Secure (or whatever you set)
 ```
 
+
