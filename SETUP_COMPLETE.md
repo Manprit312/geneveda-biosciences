@@ -132,3 +132,4 @@ npx prisma generate        # Regenerate Prisma client
 Your PostgreSQL database is fully configured and ready to use!
 
 
+

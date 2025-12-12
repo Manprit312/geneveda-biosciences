@@ -31,6 +31,7 @@ export async function GET(
       category: blog.category,
       tags: blog.tags,
       image: blog.image,
+      images: blog.images && Array.isArray(blog.images) ? blog.images : (blog.image ? [blog.image] : []),
       readTime: blog.read_time,
       featured: blog.featured,
       views: blog.views,

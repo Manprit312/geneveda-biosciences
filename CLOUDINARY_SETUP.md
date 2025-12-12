@@ -128,3 +128,4 @@ Cloudinary free tier includes:
 For production with high traffic, consider upgrading to a paid plan.
 
 
+

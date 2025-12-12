@@ -34,6 +34,7 @@ interface BlogPost {
   category: string;
   tags: string[];
   image?: string;
+  images?: string[];
   readTime: string;
   featured?: boolean;
 }
@@ -280,7 +281,7 @@ export default function BlogPostPage() {
       </header>
 
       {/* Article */}
-      <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <article className=" mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Back Button */}
         <Link
           href="/blog"
@@ -290,21 +291,40 @@ export default function BlogPostPage() {
           Back to Blog
         </Link>
 
-        {/* Blog Image */}
-        {post.image && (
+        {/* Blog Images - Grid of 2 */}
+        {((post.images && post.images.length > 0) || post.image) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 rounded-xl overflow-hidden"
+            className="mb-8"
           >
-            <Image
-              src={post.image}
-              alt={post.title}
-              width={1200}
-              height={600}
-              className="w-full h-auto object-cover"
-              unoptimized={!post.image.includes('cloudinary.com')}
-            />
+            {post.images && post.images.length > 0 ? (
+              <div className="grid grid-cols-2 gap-4">
+                {post.images.map((img, index) => (
+                  <div key={index} className="rounded-lg overflow-hidden">
+                    <Image
+                      src={img}
+                      alt={`${post.title} - Image ${index + 1}`}
+                      width={600}
+                      height={400}
+                      className="w-full h-64 object-contain"
+                      unoptimized={!img.includes('cloudinary.com')}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : post.image ? (
+              <div className="rounded-lg overflow-hidden">
+                <Image
+                  src={post.image}
+                  alt={post.title}
+                  width={800}
+                  height={500}
+                  className="w-full h-96 object-cover"
+                  unoptimized={!post.image.includes('cloudinary.com')}
+                />
+              </div>
+            ) : null}
           </motion.div>
         )}
 

@@ -28,6 +28,37 @@ export default function RichTextEditor({
   const [customColor, setCustomColor] = useState("");
   const [customHighlight, setCustomHighlight] = useState("");
 
+  // Normalize URL - add protocol if missing
+  const normalizeUrl = (url: string): string => {
+    if (!url) return "";
+    
+    // Trim whitespace
+    url = url.trim();
+    
+    // If it's already a valid URL with protocol, return as is
+    if (/^https?:\/\//i.test(url)) {
+      return url;
+    }
+    
+    // If it starts with //, add https:
+    if (url.startsWith("//")) {
+      return `https:${url}`;
+    }
+    
+    // If it starts with /, it's a relative URL, return as is
+    if (url.startsWith("/")) {
+      return url;
+    }
+    
+    // If it contains a dot and looks like a domain, add https://
+    if (url.includes(".") && !url.includes(" ")) {
+      return `https://${url}`;
+    }
+    
+    // Otherwise, treat as relative URL
+    return url;
+  };
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -351,7 +382,8 @@ export default function RichTextEditor({
                   if (e.key === "Enter") {
                     e.preventDefault();
                     if (linkUrl) {
-                      editor.chain().focus().setLink({ href: linkUrl }).run();
+                      const normalizedUrl = normalizeUrl(linkUrl);
+                      editor.chain().focus().setLink({ href: normalizedUrl }).run();
                     } else {
                       editor.chain().focus().unsetLink().run();
                     }
@@ -370,7 +402,8 @@ export default function RichTextEditor({
                   type="button"
                   onClick={() => {
                     if (linkUrl) {
-                      editor.chain().focus().setLink({ href: linkUrl }).run();
+                      const normalizedUrl = normalizeUrl(linkUrl);
+                      editor.chain().focus().setLink({ href: normalizedUrl }).run();
                     } else {
                       editor.chain().focus().unsetLink().run();
                     }

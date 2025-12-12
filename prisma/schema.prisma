@@ -42,7 +42,8 @@ model Blog {
   authorRole  String?    @map("author_role") @default("") @db.VarChar(255)
   category    BlogCategory
   tags        Json?
-  image       String?    @db.VarChar(1000)
+  image       String?    @db.VarChar(1000) // Keep for backward compatibility
+  images      Json?      // Array of image URLs for multiple images
   readTime    String     @default("5 min read") @map("read_time") @db.VarChar(50)
   featured    Boolean    @default(false)
   published   Boolean    @default(true)

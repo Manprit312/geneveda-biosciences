@@ -13,6 +13,7 @@ export interface Blog {
   category: "Research" | "NGS" | "Bioinformatics" | "Training" | "Study Abroad";
   tags: string[];
   image?: string;
+  images?: string[];
   read_time: string;
   featured: boolean;
   published: boolean;
@@ -32,6 +33,7 @@ export interface CreateBlogData {
   category: string;
   tags?: string[];
   image?: string;
+  images?: string[];
   readTime?: string;
   featured?: boolean;
   published?: boolean;
@@ -98,6 +100,7 @@ const mapPrismaToBlog = (prismaBlog: any): Blog => {
     category: categoryToString(prismaBlog.category),
     tags: Array.isArray(tags) ? tags : [],
     image: prismaBlog.image || undefined,
+    images: prismaBlog.images && Array.isArray(prismaBlog.images) ? prismaBlog.images : undefined,
     read_time: prismaBlog.readTime,
     featured: prismaBlog.featured,
     published: prismaBlog.published,
@@ -198,6 +201,7 @@ class BlogRepository {
         category: stringToCategory(data.category),
         tags: data.tags || [],
         image: data.image || null,
+        images: data.images && Array.isArray(data.images) && data.images.length > 0 ? data.images : undefined,
         readTime: data.readTime || "5 min read",
         featured: data.featured || false,
         published: data.published !== false,
@@ -232,6 +236,9 @@ class BlogRepository {
     if (data.category) updateData.category = stringToCategory(data.category);
     if (data.tags !== undefined) updateData.tags = data.tags;
     if (data.image !== undefined) updateData.image = data.image;
+    if (data.images !== undefined) {
+      updateData.images = data.images && Array.isArray(data.images) && data.images.length > 0 ? data.images : undefined;
+    }
     if (data.readTime) updateData.readTime = data.readTime;
     if (data.featured !== undefined) updateData.featured = data.featured;
     if (data.published !== undefined) {

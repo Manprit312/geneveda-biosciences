@@ -22,55 +22,84 @@ export default function NewBlogPage() {
     category: "Research",
     tags: [] as string[],
     image: "",
+    images: [] as string[],
     readTime: "5 min read",
     featured: false,
     published: true,
   });
   const [tagInput, setTagInput] = useState("");
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    // Show preview immediately
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-
-    // Upload to Cloudinary
     setUploading(true);
-    try {
-      const uploadFormData = new FormData();
-      uploadFormData.append("file", file);
+    const newImages: string[] = [];
+    const newPreviews: string[] = [];
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: uploadFormData,
+    try {
+      // First, create previews for all files
+      const previewPromises = Array.from(files).map((file) => {
+        return new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+      });
+      const previews = await Promise.all(previewPromises);
+      newPreviews.push(...previews);
+      setImagePreviews([...imagePreviews, ...newPreviews]);
+
+      // Then upload all files
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", file);
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: uploadFormData,
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          return data.url;
+        } else {
+          alert(`Failed to upload ${file.name}`);
+          return null;
+        }
       });
 
-      const data = await response.json();
+      const uploadedUrls = await Promise.all(uploadPromises);
+      const validUrls = uploadedUrls.filter((url): url is string => url !== null);
+      newImages.push(...validUrls);
 
-      if (data.success) {
-        setFormData({ ...formData, image: data.url });
-      } else {
-        alert(data.message || "Failed to upload image");
-        setImagePreview(null);
+      if (newImages.length > 0) {
+        setFormData({ 
+          ...formData, 
+          images: [...formData.images, ...newImages],
+          image: formData.images.length === 0 && !formData.image ? newImages[0] : formData.image // Keep first image for backward compatibility
+        });
       }
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Error uploading image");
-      setImagePreview(null);
+      alert("Error uploading images");
     } finally {
       setUploading(false);
+      // Reset file input
+      e.target.value = "";
     }
   };
 
-  const removeImage = () => {
-    setFormData({ ...formData, image: "" });
-    setImagePreview(null);
+  const removeImage = (index: number) => {
+    const updatedImages = formData.images.filter((_, i) => i !== index);
+    const updatedPreviews = imagePreviews.filter((_, i) => i !== index);
+    setFormData({ 
+      ...formData, 
+      images: updatedImages,
+      image: updatedImages.length > 0 ? updatedImages[0] : ""
+    });
+    setImagePreviews(updatedPreviews);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -122,7 +151,8 @@ export default function NewBlogPage() {
       .replace(/(^-|-$)/g, "");
   };
 
-  const displayImage = imagePreview || formData.image;
+  const displayImages = formData.images.length > 0 ? formData.images : (formData.image ? [formData.image] : []);
+  const displayPreviews = imagePreviews.length > 0 ? imagePreviews : [];
 
   return (
     <div>
@@ -230,56 +260,58 @@ export default function NewBlogPage() {
           </div>
         </div>
 
-        {/* Image Upload Section */}
+        {/* Image Upload Section - Multiple Images */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Blog Image
+            Blog Images (You can upload multiple images)
           </label>
-          {!displayImage ? (
-            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                disabled={uploading}
-                className="hidden"
-                id="image-upload"
-              />
-              <label
-                htmlFor="image-upload"
-                className="flex flex-col items-center justify-center cursor-pointer"
-              >
-                <Upload className="w-12 h-12 text-gray-400 mb-2" />
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {uploading ? "Uploading..." : "Click to upload or drag and drop"}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                  PNG, JPG, GIF up to 10MB
-                </p>
-              </label>
-            </div>
-          ) : (
-            <div className="relative w-full max-w-2xl border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
-              <Image
-                src={displayImage}
-                alt="Blog preview"
-                width={800}
-                height={400}
-                className="w-full h-auto object-cover"
-              />
-              <button
-                type="button"
-                onClick={removeImage}
-                className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-lg transition-colors"
-                title="Remove image"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              {uploading && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                  <div className="text-white">Uploading...</div>
+          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 mb-4">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              disabled={uploading}
+              className="hidden"
+              id="image-upload"
+              multiple
+            />
+            <label
+              htmlFor="image-upload"
+              className="flex flex-col items-center justify-center cursor-pointer"
+            >
+              <Upload className="w-12 h-12 text-gray-400 mb-2" />
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {uploading ? "Uploading..." : "Click to upload multiple images or drag and drop"}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                PNG, JPG, GIF up to 10MB each
+              </p>
+            </label>
+          </div>
+          
+          {/* Image Grid Preview - 2 columns */}
+          {(displayImages.length > 0 || displayPreviews.length > 0) && (
+            <div className="grid grid-cols-2 gap-4">
+              {displayImages.map((img, index) => (
+                <div key={index} className="relative border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                  <Image
+                    src={img}
+                    alt={`Blog image ${index + 1}`}
+                    width={400}
+                    height={300}
+                    className="w-full h-48 object-contain"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-lg transition-colors"
+                    title="Remove image"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-              )}
+              ))}
+           
             </div>
           )}
         </div>
