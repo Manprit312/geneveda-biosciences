@@ -186,7 +186,7 @@ export default function BlogPostPage() {
   const fetchBlogPost = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/blogs/${slug}`);
+      const response = await fetch(`/api/blogs/slug/${slug}`);
       const data = await response.json();
 
       if (data.success && data.blog) {

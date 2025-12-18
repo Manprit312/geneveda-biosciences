@@ -13,6 +13,7 @@ import {
   Globe,
   Edit,
   BarChart3,
+  FolderTree,
 } from "lucide-react";
 
 export default function AdminLayout({
@@ -83,6 +84,7 @@ export default function AdminLayout({
   const navItems = [
     { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/admin/blogs", icon: FileText, label: "Blogs" },
+    { href: "/admin/categories", icon: FolderTree, label: "Categories" },
     { href: "/admin/services", icon: Globe, label: "Services" },
     { href: "/admin/page-content", icon: Edit, label: "Page Content" },
     { href: "/admin/settings", icon: Settings, label: "Settings" },
@@ -163,15 +165,7 @@ export default function AdminLayout({
             >
               <Menu className="w-6 h-6" />
             </button>
-            <div className="flex items-center gap-4">
-              <Link
-                href="/"
-                target="_blank"
-                className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
-              >
-                View Website →
-              </Link>
-            </div>
+            
           </div>
         </header>
 

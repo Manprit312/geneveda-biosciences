@@ -40,7 +40,7 @@ model Blog {
   content     String     @db.Text
   author      String     @db.VarChar(255)
   authorRole  String?    @map("author_role") @default("") @db.VarChar(255)
-  category    BlogCategory
+  category    BlogCategory @default(Research)
   tags        Json?
   image       String?    @db.VarChar(1000) // Keep for backward compatibility
   images      Json?      // Array of image URLs for multiple images

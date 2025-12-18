@@ -15,7 +15,8 @@ export default function AdminBlogsPage() {
 
   const fetchBlogs = async () => {
     try {
-      const response = await fetch("/api/blogs?published=");
+      // Fetch only Geneveda blogs from blogs table (not news_blogs)
+      const response = await fetch("/api/blogs");
       const data = await response.json();
       if (data.success) {
         setBlogs(data.blogs || []);
@@ -171,6 +172,9 @@ export default function AdminBlogsPage() {
     </div>
   );
 }
+
+
+
 
 
 

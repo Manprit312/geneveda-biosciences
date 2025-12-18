@@ -118,7 +118,12 @@ export default function NewBlogPage() {
       if (data.success) {
         router.push("/admin/blogs");
       } else {
-        alert(data.message || "Failed to create blog");
+        const errorMessage = data.error || data.message || "Failed to create blog";
+        alert(errorMessage);
+        // If there's a suggested slug, update the form
+        if (data.suggestedSlug) {
+          setFormData((prev) => ({ ...prev, slug: data.suggestedSlug }));
+        }
       }
     } catch (error) {
       alert("Error creating blog");

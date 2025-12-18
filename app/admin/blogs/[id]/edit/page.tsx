@@ -45,24 +45,27 @@ export default function EditBlogPage() {
         const blog = data.blog;
         const imageUrl = blog.image || "";
         const imagesArray = blog.images && Array.isArray(blog.images) ? blog.images : (imageUrl ? [imageUrl] : []);
+        const tagsArray = Array.isArray(blog.tags) ? blog.tags : (blog.tags ? [blog.tags] : []);
+        
         setFormData({
           title: blog.title || "",
           slug: blog.slug || "",
           excerpt: blog.excerpt || "",
           content: blog.content || "",
           author: blog.author || "",
-          authorRole: blog.authorRole || "",
+          authorRole: blog.authorRole || blog.author_role || "",
           category: blog.category || "Research",
-          tags: blog.tags || [],
+          tags: tagsArray,
           image: imageUrl,
           images: imagesArray,
-          readTime: blog.readTime || "5 min read",
-          featured: blog.featured || false,
-          published: blog.published !== false,
+          readTime: blog.readTime || blog.read_time || "5 min read",
+          featured: blog.featured !== undefined ? blog.featured : false,
+          published: blog.published !== undefined ? blog.published : true,
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching blog:", error);
+      alert("Failed to load blog. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -156,10 +159,12 @@ export default function EditBlogPage() {
       if (data.success) {
         router.push("/admin/blogs");
       } else {
-        alert(data.message || "Failed to update blog");
+        const errorMessage = data.message || data.error || "Failed to update blog";
+        alert(errorMessage);
       }
-    } catch (error) {
-      alert("Error updating blog");
+    } catch (error: any) {
+      console.error("Error updating blog:", error);
+      alert(error.message || "Error updating blog");
     } finally {
       setSaving(false);
     }
